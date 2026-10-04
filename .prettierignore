@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+src/db/migrations
+.next
+playwright-report
+test-results
+# 문서는 손으로 정리한 표 모양을 유지한다
+*.md
