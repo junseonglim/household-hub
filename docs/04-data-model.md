@@ -1,6 +1,6 @@
 # 04. 데이터 모델
 
-> 상태: 초안 v0.2 · 2026-10-03 · DB: PostgreSQL (운영: Neon)
+> 상태: v0.3 (M1 구현 반영) · 2026-10-04 · DB: PostgreSQL (운영: Neon)
 
 ## 1. 공통 규칙
 
@@ -20,8 +20,9 @@
 | `session` | 세션 토큰, 만료 시각, user_id, IP · User-Agent |
 | `account` | 로그인 수단별 정보. 이메일 가입은 비밀번호 해시가 여기 저장 |
 | `verification` | 인증 토큰 (현재는 거의 쓰지 않음) |
+| `rate_limit` | 로그인 · 가입 시도 횟수 제한 기록. 서버리스(Vercel)에서도 동작하도록 메모리 대신 DB에 저장 |
 
-Better Auth CLI로 Drizzle 스키마를 생성하고, 직접 수정하지 않는다.
+정의: `src/modules/core/auth-schema.ts`. Better Auth 1.7 기본 스키마와 필드 이름을 똑같이 맞추고, 시각만 프로젝트 규칙대로 `timestamptz`로 둔다. Better Auth를 올릴 때 필드가 바뀌었는지 확인한다.
 
 ## 3. Core — 가구 · 공간 · 할 일 · 활동 로그
 
@@ -117,7 +118,7 @@ erDiagram
 | module | text | not null | `core` · `cleaning` · `cooking` · `childcare` |
 | action | text | not null | `task.completed` 형식 |
 | target_type | text | null | `task`, `recipe` … |
-| target_id | uuid | null | |
+| target_id | text | null | 대상 id (user id는 text라서 text로 통일) |
 | payload | jsonb | not null | 표시용 스냅샷 (제목 등) |
 
 - index `(household_id, created_at DESC)`

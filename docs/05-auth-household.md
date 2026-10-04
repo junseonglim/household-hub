@@ -1,6 +1,6 @@
 # 05. 인증 · 가구
 
-> 상태: 초안 v0.2 · 2026-10-03 · 사용 테이블: user · session · account (Better Auth), household, household_member
+> 상태: v0.3 (M1 구현 반영) · 2026-10-04 · 사용 테이블: user · session · account (Better Auth), household, household_member
 
 ## 1. 기본 방침
 
@@ -59,7 +59,7 @@ sequenceDiagram
   end
 ```
 
-- 가입 후 처리는 Better Auth의 사용자 생성 후(after) 훅에서 한다.
+- 가입 후 처리(`ensureMembership`)는 가입 서버 액션에서 바로 하고, 접속할 때마다 한 번 더 확인한다. 그래서 가입 API를 직접 호출한 경우에도 같은 규칙이 적용된다.
 - 첫 가입자 판정과 가구 생성은 트랜잭션 + 잠금으로 처리해 가구가 둘 생기지 않게 한다.
 - 로그인했는데 구성원 행이 없는 사용자(가입 후 처리 실패 등)는 다음 접속 때 같은 규칙으로 다시 처리한다.
 - **승인 화면**에는 이름 · 이메일 · 가입 시각을 보여 줘서 가족인지 확인할 수 있게 한다.
@@ -84,7 +84,7 @@ sequenceDiagram
 3. 그 사용자의 모든 세션을 끝내고 `must_change_password = true`로 표시한다.
 4. 임시 비밀번호로 로그인하면 비밀번호 변경 화면으로 안내한다.
 
-관리자 모두가 비밀번호를 잊은 경우에는 관리 스크립트를 쓴다: 내 PC에서 운영 DB 주소로 `pnpm admin:reset-password <이메일>` 실행.
+관리자 모두가 비밀번호를 잊은 경우에는 관리 스크립트를 쓴다: 내 PC에서 운영 DB 주소로 `pnpm admin:reset-password <이메일>` 실행 ([배포 가이드](deploy.md) 문제 해결 참고).
 
 ## 5. 정책
 

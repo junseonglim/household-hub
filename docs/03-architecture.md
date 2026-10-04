@@ -1,6 +1,6 @@
 # 03. 아키텍처
 
-> 상태: 초안 v0.2 · 2026-10-03
+> 상태: v0.3 (M1 구현 반영) · 2026-10-04
 
 ## 1. 시스템 구성
 
@@ -37,8 +37,9 @@ household-hub/
 ├─ docs/                          # 설계 문서
 ├─ src/
 │  ├─ app/                        # 라우트 (화면만, 비즈니스 로직 없음)
-│  │  ├─ (auth)/login, signup     # 비로그인 전용
-│  │  ├─ pending/                 # 로그인 + 승인 대기
+│  │  ├─ (auth)/                  # 메뉴 없는 가운데 카드 화면
+│  │  │  ├─ login/, signup/       # 비로그인
+│  │  │  └─ pending/              # 로그인 + 승인 대기 · 내보낸 계정
 │  │  ├─ (app)/                   # 로그인 + 승인된 구성원
 │  │  │  ├─ layout.tsx            # 인증 가드 + 하단 탭/사이드바
 │  │  │  ├─ cleaning/
@@ -48,7 +49,9 @@ household-hub/
 │  │  └─ api/auth/[...all]/route.ts
 │  ├─ modules/
 │  │  ├─ core/
-│  │  │  ├─ auth-context.ts       # requireMember()
+│  │  │  ├─ auth-context.ts       # getSession(), requireMember()
+│  │  │  ├─ auth-schema.ts        # Better Auth 테이블
+│  │  │  ├─ auth/                 # 가입 · 로그인 · 비밀번호 변경
 │  │  │  ├─ household/            # 가구 · 구성원 · 가입 승인
 │  │  │  ├─ space/                # 공간
 │  │  │  ├─ task/                 # 할 일 엔진 (recurrence.ts + 테스트)
@@ -64,8 +67,10 @@ household-hub/
 │  │     └─ validators.ts         # Zod 스키마
 │  ├─ components/ui/              # shadcn/ui 공용 컴포넌트
 │  ├─ db/                         # DB 연결, 스키마 모음, migrations/
-│  └─ lib/                        # auth.ts, auth-client.ts, date.ts 등
-├─ tests/e2e/                     # Playwright
+│  ├─ lib/                        # auth.ts(Better Auth 설정), env.ts, form-state.ts 등
+│  └─ proxy.ts                    # 1차 필터: 세션 쿠키 없으면 /login
+├─ tests/e2e/                     # Playwright (별도 테스트 DB 사용)
+├─ scripts/                       # 관리용 스크립트 (비밀번호 비상 초기화)
 ├─ docker-compose.yml
 └─ drizzle.config.ts
 ```

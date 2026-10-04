@@ -18,10 +18,14 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "admin:reset-password": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/reset-password.mts",
+    "vercel-build": "drizzle-kit migrate && next build"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@vercel/functions": "^3.9.11",
+    "better-auth": "^1.7.7",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "drizzle-orm": "^0.45.3",

@@ -46,3 +46,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# e2e 로그인 상태
+/tests/e2e/.auth/

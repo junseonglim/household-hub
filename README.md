@@ -10,17 +10,20 @@
 
 ```bash
 pnpm install
-cp .env.example .env.local   # 처음 한 번
+cp .env.example .env.local   # 처음 한 번 — BETTER_AUTH_SECRET 값을 채운다
 pnpm db:up                   # 로컬 PostgreSQL 실행 (Docker)
 pnpm db:migrate              # 테이블 생성
 pnpm dev                     # http://localhost:3000
 ```
 
+로컬에서 처음 가입한 계정이 우리집 소유자(owner)가 됩니다. 이후 가입자는 설정 → 우리집 구성원에서 승인합니다.
+
 | 명령 | 하는 일 |
 |---|---|
 | `pnpm dev` | 개발 서버 |
 | `pnpm check` | 타입 검사 + 린트 + 포맷 검사 + 단위 테스트 (커밋 전에 실행) |
-| `pnpm test` / `pnpm test:e2e` | 단위 테스트 (Vitest) / 화면 테스트 (Playwright, 휴대폰·PC) |
+| `pnpm test` / `pnpm test:e2e` | 단위 테스트 (Vitest) / 화면 테스트 (Playwright, 휴대폰·PC). 화면 테스트는 운영 빌드를 3100 포트에 띄우고 별도 테스트 DB(`household_hub_test`)를 매번 비워서 쓴다 |
+| `pnpm admin:reset-password <이메일>` | 관리자 모두 비밀번호를 잊었을 때 비상 초기화 ([배포 가이드](docs/deploy.md)) |
 | `pnpm format` | 코드 자동 정리 (Prettier) |
 | `pnpm db:up` / `pnpm db:down` | 로컬 DB 켜기 / 끄기 |
 | `pnpm db:generate` | 스키마(`schema.ts`)를 바꾼 뒤 마이그레이션 파일 생성 |
@@ -42,9 +45,11 @@ DB 연결 확인: http://localhost:3000/api/health → `{"ok":true,"db":"up"}`
 | [모듈: 요리](docs/modules/cooking.md) | 레시피, 주간 식단, 장보기 목록 |
 | [모듈: 육아](docs/modules/childcare.md) | 틀만 (출산 시기에 신생아 기준으로 상세 설계) |
 | [06. 로드맵·결정 사항](docs/06-roadmap.md) | 마일스톤, 결정 사항, 남은 질문 |
+| [배포 가이드](docs/deploy.md) | GitHub · Vercel · Neon 연결, 첫 가입, 문제 해결 |
 
 ## 이력
 
 - 2026-10-03 — 설계 초안 v0.1
 - 2026-10-03 — v0.2: 우리 집 전용 · 가입 승인 방식, Vercel + Neon 배포, 육아는 틀만
 - 2026-10-03 — M0: 프로젝트 기반 (Next.js 16, Tailwind 4, shadcn/ui, Drizzle, 린트 · 테스트)
+- 2026-10-04 — M1: 회원가입 · 로그인 · 가입 승인 · 구성원 관리 (Better Auth), 배포 준비

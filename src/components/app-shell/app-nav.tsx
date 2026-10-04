@@ -7,15 +7,39 @@ import { cn } from '@/lib/utils';
 import { isActivePath } from './is-active-path';
 import { navItems } from './nav-items';
 
+/** 메뉴별 알림 숫자 (예: 설정 → 가입 승인 대기 수) */
+type NavBadges = Partial<Record<string, number>>;
+
+function NavBadge({ count, className }: { count?: number; className?: string }) {
+  if (!count) return null;
+  return (
+    <span
+      className={cn(
+        'flex min-w-4.5 items-center justify-center rounded-full bg-destructive px-1 text-[0.65rem] leading-4.5 font-semibold text-white',
+        className,
+      )}
+    >
+      {count}
+      <span className="sr-only">건 확인 필요</span>
+    </span>
+  );
+}
+
 /** PC(md 이상): 왼쪽 사이드바 */
-export function AppSidebar() {
+export function AppSidebar({
+  householdName,
+  badges = {},
+}: {
+  householdName: string;
+  badges?: NavBadges;
+}) {
   const pathname = usePathname();
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r bg-sidebar px-3 py-6 md:flex">
       <Link href="/" className="mb-8 flex items-center gap-2 px-3 text-lg font-semibold">
         <House className="size-5" aria-hidden />
-        우리집
+        <span className="truncate">{householdName}</span>
       </Link>
       <nav aria-label="주 메뉴" className="flex flex-col gap-1">
         {navItems.map(({ href, label, icon: Icon }) => {
@@ -31,7 +55,8 @@ export function AppSidebar() {
               )}
             >
               <Icon className="size-4" aria-hidden />
-              {label}
+              <span className="flex-1">{label}</span>
+              <NavBadge count={badges[href]} />
             </Link>
           );
         })}
@@ -41,7 +66,7 @@ export function AppSidebar() {
 }
 
 /** 휴대폰(md 미만): 하단 탭 */
-export function AppBottomNav() {
+export function AppBottomNav({ badges = {} }: { badges?: NavBadges }) {
   const pathname = usePathname();
 
   return (
@@ -58,12 +83,13 @@ export function AppBottomNav() {
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-14 flex-col items-center justify-center gap-1 text-xs text-muted-foreground transition-colors',
+                  'relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs text-muted-foreground transition-colors',
                   active && 'font-medium text-foreground',
                 )}
               >
                 <Icon className="size-5" strokeWidth={active ? 2.25 : 1.75} aria-hidden />
                 {label}
+                <NavBadge count={badges[href]} className="absolute top-1.5 left-1/2 ml-2" />
               </Link>
             </li>
           );
