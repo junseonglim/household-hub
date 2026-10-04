@@ -43,11 +43,12 @@
 1. 대시보드 **Add New… → Project** → `household-hub` 저장소 **Import**
 2. Framework Preset은 **Next.js** (자동). 빌드 명령은 바꾸지 않습니다.
    - `package.json`의 `vercel-build`가 **DB 마이그레이션 → 빌드**를 알아서 합니다.
-3. **Environment Variables**에 하나를 넣습니다.
+3. **Environment Variables**에 두 개를 넣습니다.
 
    | Name | Value |
    |---|---|
    | `BETTER_AUTH_SECRET` | 아래 명령으로 만든 무작위 문자열 |
+   | `ENABLE_EXPERIMENTAL_COREPACK` | `1` — 이 프로젝트는 pnpm 12를 쓰는데, Vercel이 자동으로 고르는 pnpm은 10까지라서 `package.json`에 적힌 버전을 쓰도록 한다 |
 
    ```bash
    node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
@@ -86,6 +87,7 @@
 |---|---|
 | 빌드 로그에 `DATABASE_URL이 없습니다` | 4-1 DB 연결을 했는지, Production에 체크했는지 |
 | 빌드 로그에 `BETTER_AUTH_SECRET` 오류 | 3-3 환경 변수 (32자 이상) |
+| 설치 단계(`pnpm install`)에서 lockfile · 버전 오류 | 3-3의 `ENABLE_EXPERIMENTAL_COREPACK=1`이 있는지 |
 | `/api/health`가 `db: down` | Neon 대시보드에서 DB가 살아 있는지, 무료 한도를 넘지 않았는지 |
 | 처음 열 때 몇 초 느림 | 정상. Neon 무료 플랜은 5분간 쓰지 않으면 잠깐 쉬었다가 깨어남 |
 | 관리자 모두 비밀번호를 잊음 | 아래 비상 초기화 |
