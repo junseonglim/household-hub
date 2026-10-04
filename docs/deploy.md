@@ -16,7 +16,11 @@
    - Repository name: `household-hub`
    - **Private** 선택
    - README · .gitignore · license는 **추가하지 않음** (이미 있음)
-2. 만든 저장소 화면에 나오는 주소로 코드를 올립니다. 이 프로젝트 폴더에서:
+2. 커밋 작성자 이메일(`git config user.email`)이 GitHub 계정에 등록돼 있는지 확인합니다
+   (GitHub → Settings → Emails). Vercel 무료(Hobby) 플랜은 비공개 저장소에서
+   GitHub 계정과 연결되지 않은 작성자의 커밋을 배포하지 않을 수 있습니다.
+3. 만든 저장소 화면에 나오는 주소로 코드를 올립니다. **반드시 이 프로젝트 폴더**
+   (`Desktop\집안일 관리시스템`)에서 연 터미널에서 실행합니다:
 
    ```bash
    git remote add origin https://github.com/<내-아이디>/household-hub.git
@@ -28,7 +32,7 @@
 ## 2. Vercel 가입 → 데이터베이스(Neon) 만들기
 
 1. https://vercel.com/signup → **Hobby** → **Continue with GitHub**
-2. 대시보드 위쪽 **Storage** → **Create Database** → **Neon (Serverless Postgres)**
+2. 대시보드 왼쪽 메뉴 **Storage** (Integrations 바로 아래) → **Create Database** → **Neon (Serverless Postgres)**
    - 약관 · 플랜: **Free**
    - Region: 한국에서 가까운 **Singapore** (목록에 Tokyo 등 더 가까운 곳이 있으면 그쪽)
    - Database name: `household-hub`
