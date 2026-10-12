@@ -204,4 +204,115 @@ erDiagram
 
 ## 5. 육아
 
-상세 설계 보류 — [모듈: 육아](modules/childcare.md). 지금은 테이블을 만들지 않는다.
+설계 v0.1 — [모듈: 육아](modules/childcare.md). M4에서 만든다 (아직 테이블 없음).
+
+```mermaid
+erDiagram
+  household ||--o{ child : "아이"
+  child ||--o{ care_log : "수유 · 기저귀 · 수면 · 체온 · 약"
+  child ||--o{ health_event : "접종 · 검진 · 일정"
+  child ||--o{ growth_record : "측정"
+  child ||--o{ milestone : "발달"
+  household ||--o{ prep_item : "준비물"
+  household_member ||--o{ care_log : "기록자"
+```
+
+### child — 아이
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| household_id | uuid | FK, not null | |
+| name | text | not null | 태명 → 태어나면 이름으로 바꿀 수 있음 |
+| due_date | date | null | 출산 예정일 |
+| birth_date | date | null | null이면 '출산 전' |
+| sex | text | null | `female` · `male` · null(모름 · 비공개) |
+| sort_order | int | not null | 아이 고르기 순서 |
+| archived_at | timestamptz | null | |
+
+### care_log — 신생아 기록
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| household_id | uuid | FK, not null | |
+| child_id | uuid | FK (cascade), not null | |
+| type | text | not null | `feeding` · `diaper` · `sleep` · `temperature` · `medicine` |
+| started_at | timestamptz | not null | 기록 시각 (타이머는 시작 시각) |
+| ended_at | timestamptz | null | 수면 · 직수만. null이면 진행 중 |
+| details | jsonb | not null, 기본 `{}` | 종류별 내용 (아래) |
+| note | text | null | |
+| recorded_by_member_id | uuid | FK, not null | |
+
+`details` (Zod로 검증):
+
+| type | details |
+|---|---|
+| feeding | `{ method: 'breast', side: 'left' \| 'right' \| 'both' }` · `{ method: 'pumped' \| 'formula', amountMl: number }` |
+| diaper | `{ kind: 'wet' \| 'dirty' \| 'both' }` |
+| sleep | `{}` |
+| temperature | `{ celsius: number }` (34.0~42.0) |
+| medicine | `{ name: string, dose: string \| null }` |
+
+- index `(child_id, started_at DESC)` — 하루 타임라인 · 마지막 수유
+- 부분 index `(child_id, type) WHERE ended_at IS NULL AND type IN ('sleep', 'feeding')` — 진행 중 타이머 (종류별 하나는 앱에서 보장)
+
+### health_event — 건강 · 일정
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| household_id | uuid | FK, not null | |
+| child_id | uuid | FK (cascade), not null | |
+| kind | text | not null | `vaccination` · `checkup` · `admin`(행정) · `celebration`(기념일) · `visit`(병원 방문) · `appointment`(그 밖의 일정) |
+| title | text | not null | 'DTaP 1차', '산부인과 정기검진' |
+| standard_code | text | null | 표준 일정이면 코드 ('dtap-1'). 아이마다 unique |
+| due_date | date | null | 권장 시작일 · 예정일 |
+| due_until | date | null | 권장 마지막 날 (기간이 있는 일정) |
+| scheduled_at | timestamptz | null | 예약 시각 (선택) |
+| place | text | null | 병원 이름 등 |
+| done_on | date | null | 한 날 |
+| done_by_member_id | uuid | FK, null | 기록한 사람 |
+| dismissed_at | timestamptz | null | 표준 일정 '해당 없음' (다시 만들지 않음) |
+| note | text | null | 백신 이름 · 로트 번호, 증상 · 처방 |
+
+- unique `(child_id, standard_code)`
+- index `(child_id, due_date)`
+
+### growth_record — 성장 측정
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| household_id | uuid | FK, not null | |
+| child_id | uuid | FK (cascade), not null | |
+| measured_on | date | not null | |
+| weight_kg | numeric(5,2) | null | |
+| height_cm | numeric(4,1) | null | |
+| head_cm | numeric(4,1) | null | 셋 중 하나 이상 (check) |
+| note | text | null | |
+| recorded_by_member_id | uuid | FK, not null | |
+
+### milestone — 발달 기록
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| household_id | uuid | FK, not null | |
+| child_id | uuid | FK (cascade), not null | |
+| title | text | not null | '첫 뒤집기' |
+| achieved_on | date | not null | |
+| note | text | null | |
+| recorded_by_member_id | uuid | FK, not null | |
+
+### prep_item — 출산 준비 체크리스트
+
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| household_id | uuid | FK, not null | 아이와 무관하게 가구 단위 |
+| category | text | not null | 수유 · 위생 · 목욕 · 의류 · 침구 · 외출 · 이동 · 입원 · 조리원 가방 · 미리 할 일 · (직접 입력) |
+| title | text | not null | |
+| quantity | text | null | '4개' 같은 참고용 글 |
+| note | text | null | '선물 받음 — 이모' |
+| is_done | boolean | not null, 기본 false | |
+| done_by_member_id | uuid | FK, null | |
+| done_at | timestamptz | null | |
+| sort_order | int | not null | |
+| created_by_member_id | uuid | FK, not null | |
+
+- 잘못 넣은 항목은 실제로 지운다 (기록이 아니라 목록).
