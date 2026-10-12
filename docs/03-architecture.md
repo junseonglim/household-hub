@@ -58,7 +58,7 @@ household-hub/
 │  │  │  ├─ guarded-action.ts     # 서버 액션 공통 틀 (인가 + 업무 오류 → 폼 오류)
 │  │  │  └─ activity/             # logActivity()
 │  │  ├─ cleaning/                # 각 모듈은 아래와 같은 구조
-│  │  ├─ cooking/
+│  │  ├─ cooking/                 # 기능이 여럿이면 recipe/ · meal-plan/ · shopping/ 하위 폴더마다 같은 구조
 │  │  └─ childcare/               # 지금은 README만
 │  │     ├─ components/           # 이 모듈 전용 UI
 │  │     ├─ actions.ts            # 서버 액션
@@ -67,6 +67,7 @@ household-hub/
 │  │     ├─ schema.ts             # Drizzle 테이블
 │  │     └─ validators.ts         # Zod 스키마
 │  ├─ components/ui/              # shadcn/ui 공용 컴포넌트
+│  ├─ components/form/            # 폼 공통 (제출 버튼, 칩 고르기, 확인 창, usePersistentFormAction)
 │  ├─ db/                         # DB 연결, 스키마 모음, migrations/
 │  ├─ lib/                        # auth.ts(Better Auth 설정), env.ts, form-state.ts 등
 │  └─ proxy.ts                    # 1차 필터: 세션 쿠키 없으면 /login

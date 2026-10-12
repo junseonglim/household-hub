@@ -1,10 +1,10 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { ChoiceChip } from '@/components/form/choice-chip';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
-import { cn } from '@/lib/utils';
 import {
   formatShortDate,
   isValidLocalDate,
@@ -20,15 +20,6 @@ import {
   type Weekday,
 } from '@/modules/core/task/recurrence';
 import { RECURRENCE_FIELDS } from '../form-fields';
-
-/**
- * 라디오 · 체크박스를 칩 모양으로. 투명한 입력 요소가 칩 전체를 덮어서 탭 · 키보드 · 화면 낭독기가
- * 그대로 입력 요소를 다룬다. 보이는 모양은 바로 뒤의 칩(span)이 peer-checked로 그린다.
- */
-export const chipLabelClassName = 'relative inline-flex cursor-pointer';
-export const chipInputClassName = 'peer absolute inset-0 size-full cursor-pointer opacity-0';
-export const chipClassName =
-  'inline-flex h-9 min-w-9 items-center justify-center rounded-full border px-3 text-sm transition-colors peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50';
 
 type RecurrenceFieldsProps = {
   /** 한 폼에 여러 개를 둘 때 칸 이름 앞에 붙인다 (처음 설정 화면) */
@@ -80,21 +71,19 @@ export function RecurrenceFields({
         <legend className="mb-2 text-sm font-medium">반복</legend>
         <div className="flex flex-wrap gap-2">
           {RECURRENCE_TYPES.map((option) => (
-            <label key={option} className={chipLabelClassName}>
-              <input
-                type="radio"
-                name={name(RECURRENCE_FIELDS.type)}
-                value={option}
-                checked={type === option}
-                onChange={() => {
-                  setType(option);
-                  onTypeChange?.(option);
-                  update({ type: option });
-                }}
-                className={chipInputClassName}
-              />
-              <span className={chipClassName}>{RECURRENCE_TYPE_LABELS[option]}</span>
-            </label>
+            <ChoiceChip
+              key={option}
+              name={name(RECURRENCE_FIELDS.type)}
+              value={option}
+              checked={type === option}
+              onChange={() => {
+                setType(option);
+                onTypeChange?.(option);
+                update({ type: option });
+              }}
+            >
+              {RECURRENCE_TYPE_LABELS[option]}
+            </ChoiceChip>
           ))}
         </div>
       </fieldset>
@@ -108,21 +97,21 @@ export function RecurrenceFields({
           <input type="hidden" name={name(RECURRENCE_FIELDS.weekdays)} value={weekdays.join(',')} />
           <div className="flex flex-wrap gap-1.5">
             {WEEKDAY_LABELS.map((label, day) => (
-              <label key={label} className={chipLabelClassName}>
-                <input
-                  type="checkbox"
-                  checked={weekdays.includes(day as Weekday)}
-                  onChange={(event) => {
-                    const next = event.target.checked
-                      ? [...weekdays, day as Weekday].sort((a, b) => a - b)
-                      : weekdays.filter((selected) => selected !== day);
-                    setWeekdays(next);
-                    update({ weekdays: next });
-                  }}
-                  className={chipInputClassName}
-                />
-                <span className={cn(chipClassName, 'px-0')}>{label}</span>
-              </label>
+              <ChoiceChip
+                key={label}
+                type="checkbox"
+                checked={weekdays.includes(day as Weekday)}
+                onChange={(event) => {
+                  const next = event.target.checked
+                    ? [...weekdays, day as Weekday].sort((a, b) => a - b)
+                    : weekdays.filter((selected) => selected !== day);
+                  setWeekdays(next);
+                  update({ weekdays: next });
+                }}
+                chipClassName="px-0"
+              >
+                {label}
+              </ChoiceChip>
             ))}
           </div>
           {error(RECURRENCE_FIELDS.weekdays) && (

@@ -150,7 +150,7 @@ erDiagram
 | steps | jsonb | not null, 기본 `[]` | 조리 순서 (`string[]`) |
 | tags | text[] | not null, 기본 `{}` | 국 · 반찬 · 메인 · 간식 … |
 | source_url | text | null | 출처 (블로그, 유튜브) |
-| image_url | text | null | (이후, DB가 아닌 별도 저장소) |
+| image_url | text | null | (이후 — 아직 만들지 않음. 사진은 DB가 아닌 별도 저장소) |
 | created_by_member_id | uuid | FK, not null | |
 | archived_at | timestamptz | null | |
 

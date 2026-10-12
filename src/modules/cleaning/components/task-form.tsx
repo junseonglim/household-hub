@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { ChoiceChip } from '@/components/form/choice-chip';
 import { FormMessage } from '@/components/form/form-message';
 import { SubmitButton } from '@/components/form/submit-button';
 import { TextField } from '@/components/form/text-field';
@@ -19,12 +20,7 @@ import {
   type Recurrence,
   type RecurrenceType,
 } from '@/modules/core/task/recurrence';
-import {
-  chipClassName,
-  chipInputClassName,
-  chipLabelClassName,
-  RecurrenceFields,
-} from './recurrence-fields';
+import { RecurrenceFields } from './recurrence-fields';
 
 export type TaskFormInitial = {
   /** 수정할 때만 */
@@ -105,23 +101,19 @@ export function TaskForm({
           <legend className="mb-2 text-sm font-medium">공간</legend>
           <div className="flex flex-wrap gap-2">
             {[{ id: '', name: '없음', icon: null }, ...spaces].map((space) => (
-              <label key={space.id || 'none'} className={chipLabelClassName}>
-                <input
-                  type="radio"
-                  name="spaceId"
-                  value={space.id}
-                  defaultChecked={selectedSpace === space.id}
-                  className={chipInputClassName}
-                />
-                <span className={chipClassName}>
-                  {space.icon && (
-                    <span aria-hidden className="mr-1">
-                      {space.icon}
-                    </span>
-                  )}
-                  {space.name}
-                </span>
-              </label>
+              <ChoiceChip
+                key={space.id || 'none'}
+                name="spaceId"
+                value={space.id}
+                defaultChecked={selectedSpace === space.id}
+              >
+                {space.icon && (
+                  <span aria-hidden className="mr-1">
+                    {space.icon}
+                  </span>
+                )}
+                {space.name}
+              </ChoiceChip>
             ))}
           </div>
           {errors.spaceId && <p className="text-sm text-destructive">{errors.spaceId}</p>}

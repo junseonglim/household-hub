@@ -2,3 +2,4 @@
 // 모듈을 추가하면 여기에 export를 추가한다.
 export * from '../modules/core/auth-schema';
 export * from '../modules/core/schema';
+export * from '../modules/cooking/schema';

@@ -8,7 +8,9 @@ import {
   isValidLocalDate,
   localDateOf,
   localDateTimeOf,
+  startOfWeek,
   todayIn,
+  weekDates,
   weekdayOf,
 } from './local-date';
 
@@ -34,6 +36,21 @@ describe('날짜 계산', () => {
     expect(weekdayOf('2026-10-10')).toBe(6);
     expect(weekdayOf('2026-10-11')).toBe(0);
     expect(formatShortDate('2026-10-17')).toBe('10/17 (토)');
+  });
+
+  it('한 주는 월요일부터 일요일까지', () => {
+    expect(startOfWeek('2026-10-11')).toBe('2026-10-05'); // 일요일 → 그 주 월요일
+    expect(startOfWeek('2026-10-12')).toBe('2026-10-12'); // 월요일
+    expect(startOfWeek('2026-10-01')).toBe('2026-09-28'); // 달을 넘긴다
+    expect(weekDates('2026-10-05')).toEqual([
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-07',
+      '2026-10-08',
+      '2026-10-09',
+      '2026-10-10',
+      '2026-10-11',
+    ]);
   });
 
   it('며칠 전인지 말로 바꾼다', () => {

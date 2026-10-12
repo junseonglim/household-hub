@@ -48,6 +48,16 @@ export function maxDate(a: LocalDate, b: LocalDate): LocalDate {
   return a >= b ? a : b;
 }
 
+/** 그 날이 속한 주의 월요일 (한 주 = 월요일 ~ 일요일) */
+export function startOfWeek(date: LocalDate): LocalDate {
+  return addDays(date, -((weekdayOf(date) + 6) % 7));
+}
+
+/** 월요일부터 7일 */
+export function weekDates(monday: LocalDate): LocalDate[] {
+  return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+}
+
 type ZonedParts = { year: string; month: string; day: string; hour: string; minute: string };
 
 function zonedParts(instant: Date, timeZone: string): ZonedParts {
