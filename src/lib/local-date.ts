@@ -44,6 +44,26 @@ export function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
+/** N달 뒤 같은 날. 그 달에 없는 날이면 말일 (1/31 + 1달 = 2/28) */
+export function addMonths(date: LocalDate, months: number): LocalDate {
+  const [year, month, day] = date.split('-').map(Number) as [number, number, number];
+  const index = year * 12 + (month - 1) + months;
+  const targetYear = Math.floor(index / 12);
+  const targetMonth = (index % 12) + 1;
+  const targetDay = Math.min(day, daysInMonth(targetYear, targetMonth));
+  return `${String(targetYear).padStart(4, '0')}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+}
+
+/** from부터 to까지 꽉 찬 달 수 (생후 N개월). to가 from보다 앞이면 음수가 아니라 0 */
+export function fullMonthsBetween(from: LocalDate, to: LocalDate): number {
+  if (to < from) return 0;
+  const [fromYear, fromMonth] = from.split('-').map(Number) as [number, number];
+  const [toYear, toMonth] = to.split('-').map(Number) as [number, number];
+  let months = (toYear - fromYear) * 12 + (toMonth - fromMonth);
+  if (addMonths(from, months) > to) months -= 1;
+  return months;
+}
+
 export function maxDate(a: LocalDate, b: LocalDate): LocalDate {
   return a >= b ? a : b;
 }
@@ -135,6 +155,19 @@ export function instantFromLocalDateTime(value: string, timeZone: string): Date 
 export function formatShortDate(date: LocalDate): string {
   const [, month, day] = date.split('-').map(Number);
   return `${month}/${day} (${WEEKDAY_LABELS[weekdayOf(date)]})`;
+}
+
+/** 'HH:mm' → '오후 2:30' */
+export function formatTimeOfDay(time: string): string {
+  const [hour = 0, minute = 0] = time.split(':').map(Number);
+  const period = hour < 12 ? '오전' : '오후';
+  return `${period} ${hour % 12 === 0 ? 12 : hour % 12}:${String(minute).padStart(2, '0')}`;
+}
+
+/** '2027년 3월 15일 (월)' */
+export function formatFullDate(date: LocalDate): string {
+  const [year, month, day] = date.split('-').map(Number);
+  return `${year}년 ${month}월 ${day}일 (${WEEKDAY_LABELS[weekdayOf(date)]})`;
 }
 
 /** 지난 날짜를 '오늘' · '어제' · 'N일 전'으로 */

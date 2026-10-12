@@ -17,11 +17,6 @@ test('주 메뉴로 네 화면을 오갈 수 있다', async ({ page }) => {
   }
 });
 
-test('육아 화면은 준비 중으로 표시된다', async ({ page }) => {
-  await page.goto('/childcare');
-  await expect(page.getByText('준비 중')).toBeVisible();
-});
-
 test('DB 연결 상태를 확인할 수 있다', async ({ request }) => {
   const response = await request.get('/api/health');
   expect(response.ok()).toBe(true);

@@ -39,7 +39,14 @@ export default defineConfig({
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: OWNER_STATE },
     },
-    // 5) 화면 이동은 휴대폰 · PC 모두
+    // 5) 육아: 아이 등록 → 준비물 → 일정 → 태어났어요 (PC 화면에서 한 번)
+    {
+      name: 'childcare',
+      testMatch: /childcare\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: OWNER_STATE },
+    },
+    // 6) 화면 이동은 휴대폰 · PC 모두
     {
       name: 'mobile',
       testMatch: /navigation\.spec\.ts/,

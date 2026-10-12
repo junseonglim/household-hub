@@ -44,7 +44,7 @@ household-hub/
 │  │  │  ├─ layout.tsx            # 인증 가드 + 하단 탭/사이드바
 │  │  │  ├─ cleaning/
 │  │  │  ├─ cooking/
-│  │  │  ├─ childcare/            # 지금은 "준비 중" 빈 화면
+│  │  │  ├─ childcare/
 │  │  │  └─ settings/
 │  │  └─ api/auth/[...all]/route.ts
 │  ├─ modules/

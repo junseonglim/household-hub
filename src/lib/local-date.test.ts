@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDays,
+  addMonths,
   diffDays,
   formatDaysAgo,
+  formatFullDate,
   formatShortDate,
+  formatTimeOfDay,
+  fullMonthsBetween,
   instantFromLocalDateTime,
   isValidLocalDate,
   localDateOf,
@@ -32,10 +36,35 @@ describe('날짜 계산', () => {
     expect(diffDays('2026-10-25', '2026-11-01')).toBe(-7);
   });
 
+  it('달을 더하면 같은 날, 그 달에 없는 날이면 말일', () => {
+    expect(addMonths('2027-03-14', 2)).toBe('2027-05-14');
+    expect(addMonths('2027-01-31', 1)).toBe('2027-02-28');
+    expect(addMonths('2028-01-31', 1)).toBe('2028-02-29');
+    expect(addMonths('2027-11-30', 3)).toBe('2028-02-29');
+    expect(addMonths('2027-03-14', 12)).toBe('2028-03-14');
+    expect(addMonths('2028-02-29', 12)).toBe('2029-02-28');
+    expect(addMonths('2027-03-14', -3)).toBe('2026-12-14');
+  });
+
+  it('꽉 찬 달 수를 센다 (생후 N개월)', () => {
+    expect(fullMonthsBetween('2027-03-14', '2027-03-14')).toBe(0);
+    expect(fullMonthsBetween('2027-03-14', '2027-04-13')).toBe(0);
+    expect(fullMonthsBetween('2027-03-14', '2027-04-14')).toBe(1);
+    expect(fullMonthsBetween('2027-01-31', '2027-02-28')).toBe(1);
+    expect(fullMonthsBetween('2027-03-14', '2028-03-13')).toBe(11);
+    expect(fullMonthsBetween('2027-03-14', '2028-03-14')).toBe(12);
+    expect(fullMonthsBetween('2027-03-14', '2027-01-01')).toBe(0);
+  });
+
   it('요일을 구한다 (0 = 일요일)', () => {
     expect(weekdayOf('2026-10-10')).toBe(6);
     expect(weekdayOf('2026-10-11')).toBe(0);
     expect(formatShortDate('2026-10-17')).toBe('10/17 (토)');
+    expect(formatFullDate('2027-03-15')).toBe('2027년 3월 15일 (월)');
+    expect(formatTimeOfDay('00:05')).toBe('오전 12:05');
+    expect(formatTimeOfDay('09:30')).toBe('오전 9:30');
+    expect(formatTimeOfDay('12:00')).toBe('오후 12:00');
+    expect(formatTimeOfDay('14:30')).toBe('오후 2:30');
   });
 
   it('한 주는 월요일부터 일요일까지', () => {

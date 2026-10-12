@@ -1,6 +1,6 @@
 # 04. 데이터 모델
 
-> 상태: v0.4 (M2 구현 반영) · 2026-10-11 · DB: PostgreSQL (운영: Neon)
+> 상태: v0.5 (M4-1 구현 반영) · 2026-10-12 · DB: PostgreSQL (운영: Neon)
 
 ## 1. 공통 규칙
 
@@ -204,7 +204,7 @@ erDiagram
 
 ## 5. 육아
 
-설계 v0.1 — [모듈: 육아](modules/childcare.md). M4에서 만든다 (아직 테이블 없음).
+[모듈: 육아](modules/childcare.md). M4-1에서 child · health_event · growth_record · prep_item을 만들었다 (정의: `src/modules/childcare/schema.ts`, 마이그레이션 `0004_childcare_prep_schedule.sql`). care_log · milestone은 M4-2에서 만든다.
 
 ```mermaid
 erDiagram
@@ -261,12 +261,12 @@ erDiagram
 |---|---|---|---|
 | household_id | uuid | FK, not null | |
 | child_id | uuid | FK (cascade), not null | |
-| kind | text | not null | `vaccination` · `checkup` · `admin`(행정) · `celebration`(기념일) · `visit`(병원 방문) · `appointment`(그 밖의 일정) |
+| kind | text | not null | 표준: `vaccination` · `checkup` · `admin`(행정) · `celebration`(기념일). 직접 추가: `prenatal`(산부인과) · `visit`(병원 방문) · `vaccination` · `appointment`(그 밖의 일정) |
 | title | text | not null | 'DTaP 1차', '산부인과 정기검진' |
 | standard_code | text | null | 표준 일정이면 코드 ('dtap-1'). 아이마다 unique |
 | due_date | date | null | 권장 시작일 · 예정일 |
 | due_until | date | null | 권장 마지막 날 (기간이 있는 일정) |
-| scheduled_at | timestamptz | null | 예약 시각 (선택) |
+| scheduled_at | timestamptz | null | 예약 시각 (선택). 날짜는 due_date, 시각을 넣었을 때만 due_date + 시각을 가구 시간대로 저장 |
 | place | text | null | 병원 이름 등 |
 | done_on | date | null | 한 날 |
 | done_by_member_id | uuid | FK, null | 기록한 사람 |
@@ -285,7 +285,7 @@ erDiagram
 | measured_on | date | not null | |
 | weight_kg | numeric(5,2) | null | |
 | height_cm | numeric(4,1) | null | |
-| head_cm | numeric(4,1) | null | 셋 중 하나 이상 (check) |
+| head_cm | numeric(4,1) | null | 셋 중 하나 이상 (check `growth_record_has_value`) |
 | note | text | null | |
 | recorded_by_member_id | uuid | FK, not null | |
 

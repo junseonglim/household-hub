@@ -3,3 +3,4 @@
 export * from '../modules/core/auth-schema';
 export * from '../modules/core/schema';
 export * from '../modules/cooking/schema';
+export * from '../modules/childcare/schema';
