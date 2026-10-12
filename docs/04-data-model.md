@@ -1,6 +1,6 @@
 # 04. 데이터 모델
 
-> 상태: v0.3 (M1 구현 반영) · 2026-10-04 · DB: PostgreSQL (운영: Neon)
+> 상태: v0.4 (M2 구현 반영) · 2026-10-11 · DB: PostgreSQL (운영: Neon)
 
 ## 1. 공통 규칙
 
@@ -75,6 +75,7 @@ erDiagram
 | archived_at | timestamptz | null | |
 
 가구가 만들어질 때 기본 공간을 함께 만든다: 거실 · 주방 · 욕실 · 침실 · 아이방 · 현관 · 베란다 · 다용도실.
+보관하면 그 공간을 가리키던 할 일의 `space_id`를 null('공간 없음')로 바꾼다. 보관하지 않은 공간끼리는 이름이 겹치지 않게 앱에서 검사한다.
 
 ### task — 할 일 (공통 엔진)
 
@@ -95,6 +96,8 @@ erDiagram
 | archived_at | timestamptz | null | |
 
 - index `(household_id, module, next_due_date) WHERE archived_at IS NULL`
+- 정의: `src/modules/core/schema.ts`, 마이그레이션 `0002_tasks.sql`
+- 구성원을 내보내면 그 사람이 담당하던 할 일의 `assignee_member_id`를 null(누구나)로 바꾼다.
 
 ### task_completion — 완료 기록
 

@@ -1,6 +1,6 @@
 # 05. 인증 · 가구
 
-> 상태: v0.3 (M1 구현 반영) · 2026-10-04 · 사용 테이블: user · session · account (Better Auth), household, household_member
+> 상태: v0.3.1 (M2 반영) · 2026-10-11 · 사용 테이블: user · session · account (Better Auth), household, household_member
 
 ## 1. 기본 방침
 
@@ -48,7 +48,7 @@ sequenceDiagram
   W->>D: user · account · session 생성 (Better Auth)
   alt 가구가 아직 없음 (첫 가입자)
     W->>D: household · member(owner, active) · 기본 공간 생성
-    W-->>U: /cleaning/setup (청소 처음 설정)
+    W-->>U: /cleaning (할 일이 없으면 '추천 할 일 고르기' 안내)
   else 가구가 이미 있음
     W->>D: member(pending) 생성
     W-->>U: /pending (승인 대기 안내)

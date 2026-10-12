@@ -1,7 +1,7 @@
 import { hashPassword } from 'better-auth/crypto';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import { db, type Tx } from '@/db';
-import { account, household, householdMember, session, space, user } from '@/db/schema';
+import { account, household, householdMember, session, space, task, user } from '@/db/schema';
 import { DomainError } from '@/lib/domain-error';
 import { logActivity } from '../activity/log';
 import type { MemberContext } from '../member-context';
@@ -210,6 +210,11 @@ export async function removeMember(ctx: MemberContext, memberId: string) {
       .set({ status: 'removed' })
       .where(eq(householdMember.id, target.id));
     await tx.delete(session).where(eq(session.userId, target.userId));
+    // 그 사람이 맡던 할 일은 '누구나'로 돌린다
+    await tx
+      .update(task)
+      .set({ assigneeMemberId: null })
+      .where(and(eq(task.householdId, ctx.householdId), eq(task.assigneeMemberId, target.id)));
     await logActivity(tx, {
       householdId: ctx.householdId,
       actorMemberId: ctx.memberId,

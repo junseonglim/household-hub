@@ -1,9 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { DomainError } from '@/lib/domain-error';
-import { failure, formValues, invalidInput, pick, success, type FormState } from '@/lib/form-state';
-import { requireMember } from '../auth-context';
+import { formValues, invalidInput, pick, success, type FormState } from '@/lib/form-state';
+import { guardedAction } from '../guarded-action';
 import type { MemberContext } from '../member-context';
 import {
   approveMember,
@@ -22,21 +21,9 @@ import {
   profileSchema,
 } from './validators';
 
-/** 업무 규칙 위반(DomainError)은 폼 오류로, 그 외 오류는 그대로 던진다 */
-async function guarded<T>(
-  run: (ctx: MemberContext) => Promise<FormState<T>>,
-): Promise<FormState<T>> {
-  const ctx = await requireMember();
-  try {
-    const result = await run(ctx);
-    // 구성원 목록 · 메뉴의 승인 대기 배지 등 화면 전체를 새로 그린다
-    revalidatePath('/', 'layout');
-    return result;
-  } catch (error) {
-    if (error instanceof DomainError) return failure<T>(error.message);
-    throw error;
-  }
-}
+// 구성원 목록 · 메뉴의 승인 대기 배지 등 화면 전체를 새로 그린다
+const guarded = <T>(run: (ctx: MemberContext) => Promise<FormState<T>>) =>
+  guardedAction(run, () => revalidatePath('/', 'layout'));
 
 export async function approveMemberAction(_prev: FormState, formData: FormData) {
   return guarded(async (ctx) => {

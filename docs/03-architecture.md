@@ -1,6 +1,6 @@
 # 03. 아키텍처
 
-> 상태: v0.3 (M1 구현 반영) · 2026-10-04
+> 상태: v0.4 (M2 구현 반영) · 2026-10-11
 
 ## 1. 시스템 구성
 
@@ -53,8 +53,9 @@ household-hub/
 │  │  │  ├─ auth-schema.ts        # Better Auth 테이블
 │  │  │  ├─ auth/                 # 가입 · 로그인 · 비밀번호 변경
 │  │  │  ├─ household/            # 가구 · 구성원 · 가입 승인
-│  │  │  ├─ space/                # 공간
-│  │  │  ├─ task/                 # 할 일 엔진 (recurrence.ts + 테스트)
+│  │  │  ├─ space/                # 공간 (조회 · 관리 화면 컴포넌트)
+│  │  │  ├─ task/                 # 할 일 엔진 (recurrence.ts · service · queries + 테스트)
+│  │  │  ├─ guarded-action.ts     # 서버 액션 공통 틀 (인가 + 업무 오류 → 폼 오류)
 │  │  │  └─ activity/             # logActivity()
 │  │  ├─ cleaning/                # 각 모듈은 아래와 같은 구조
 │  │  ├─ cooking/
@@ -87,13 +88,19 @@ household-hub/
 | 서비스 | `service.ts` | 비즈니스 규칙, 트랜잭션, 활동 로그 기록 | 폼·HTTP 처리 |
 | 스키마 | `schema.ts`, `validators.ts` | 테이블 정의, 입력·jsonb 구조 정의 | |
 
-서버 액션의 반환 형태는 통일한다.
+서버 액션의 반환 형태는 통일한다 (`src/lib/form-state.ts`). `useActionState`와 함께 쓴다.
 
 ```ts
-type ActionResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: { code: string; message: string; fieldErrors?: Record<string, string> } };
+type FormState<T = undefined> = {
+  ok: boolean | null;                          // null = 아직 제출 전
+  message?: string;                            // 폼 위 · 토스트에 보여 줄 문구
+  fieldErrors?: Partial<Record<string, string>>; // 칸별 오류
+  values?: Record<string, string>;             // 오류 때 되살릴 입력값 (비밀번호 제외)
+  data?: T;                                    // 예: 완료 기록 id (취소용)
+};
 ```
+
+서버 액션은 `guardedAction()`(`modules/core/guarded-action.ts`)으로 감싼다: `requireMember()` → 실행 → 업무 규칙 위반(`DomainError`: FORBIDDEN · NOT_FOUND · INVALID · CONFLICT)은 `{ ok: false, message }`로, 그 외 오류는 그대로 던져 `error.tsx`로 → 성공 · 실패와 관계없이 화면 재검증.
 
 ## 4. 모듈 의존 규칙
 
@@ -174,8 +181,14 @@ export function firstDueDate(r: Recurrence, startDate: string): string | null;
 /** 완료 후 다음 예정일. null이면 더 이상 예정 없음 */
 export function nextDueDate(r: Recurrence, dueDate: string | null, completedOn: string): string | null;
 
-/** 기간 안의 발생일 목록 (달력 · 일정 표시용) */
-export function occurrencesBetween(r: Recurrence, from: string, to: string): string[];
+/** 할 일을 고친 뒤의 시작일 · 다음 예정일 (서버 저장과 수정 화면 미리보기가 같이 쓴다) */
+export function scheduleAfterEdit(current, next, { today, lastCompletedOn }): { startDate; nextDueDate };
+
+/** 미리보기: 첫 예정일부터 제때 완료한다고 가정한 예정일 N개 */
+export function upcomingDueDates(r: Recurrence, firstDue: string | null, count: number): string[];
+
+/** 상태 분류 (아래 표) */
+export function dueStatus(task, today: string): DueStatus;
 ```
 
 **두 가지 반복 방식**
@@ -261,4 +274,6 @@ await logActivity(tx, ctx, {
 
 - 입력 오류는 서버 액션이 `fieldErrors`로 돌려주고 폼 필드 아래에 표시한다.
 - 예상하지 못한 오류는 라우트의 `error.tsx`에서 처리하고 서버 로그에 남긴다.
-- 체크·완료 같은 잦은 동작은 낙관적 업데이트로 즉시 반영하고, 실패하면 되돌리며 알린다.
+- 체크·완료 같은 잦은 동작은 낙관적 업데이트(`useOptimistic`)로 즉시 반영하고, 실패하면 되돌리며 토스트로 알린다.
+- 다른 가족이 먼저 바꿔서 화면이 오래된 경우(`CONFLICT`)는 알리고 화면을 새로 그린다.
+- 상태로 관리하는 칸이 있는 폼(반복 고르기 등)은 제출 후 자동 초기화를 끈다(`usePersistentFormAction`). React가 폼을 초기화하면 화면의 선택과 상태가 어긋나기 때문이다.

@@ -15,6 +15,13 @@
       "when": 1791079517048,
       "tag": "0001_auth_and_members",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791707304031,
+      "tag": "0002_tasks",
+      "breakpoints": true
     }
   ]
 }

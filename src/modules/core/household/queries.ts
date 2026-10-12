@@ -40,6 +40,23 @@ export async function listMembers(ctx: MemberContext): Promise<MemberListItem[]>
   return rows.map((row) => ({ ...row, isMe: row.id === ctx.memberId }));
 }
 
+export type ActiveMember = { id: string; displayName: string; color: string };
+
+/** 담당자 · 완료한 사람 고르기용 (가입 순) */
+export async function listActiveMembers(ctx: MemberContext): Promise<ActiveMember[]> {
+  return db
+    .select({
+      id: householdMember.id,
+      displayName: householdMember.displayName,
+      color: householdMember.color,
+    })
+    .from(householdMember)
+    .where(
+      and(eq(householdMember.householdId, ctx.householdId), eq(householdMember.status, 'active')),
+    )
+    .orderBy(asc(householdMember.createdAt));
+}
+
 export async function countPendingMembers(householdId: string): Promise<number> {
   const [row] = await db
     .select({ value: count() })

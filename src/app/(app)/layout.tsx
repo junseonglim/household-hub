@@ -1,5 +1,6 @@
 import { AppNotices } from '@/components/app-shell/app-notices';
 import { AppBottomNav, AppSidebar } from '@/components/app-shell/app-nav';
+import { Toaster } from '@/components/ui/sonner';
 import { requireMember } from '@/modules/core/auth-context';
 import { canAdminister } from '@/modules/core/household/permissions';
 import { countPendingMembers } from '@/modules/core/household/queries';
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </main>
       <AppBottomNav badges={badges} />
+      <Toaster />
     </div>
   );
 }
