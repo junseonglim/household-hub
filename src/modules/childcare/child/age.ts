@@ -51,6 +51,18 @@ export function describeAge({ days, weeks, months }: Age): string {
   return `생후 ${months}개월 · 만 ${Math.floor(months / 12)}세`;
 }
 
+/** 그날 기준 나이를 짧게: '생후 23일' · '생후 2개월 3일' · '만 2세 1개월' (성장 · 발달 기록 목록) */
+export function describeAgeOn(birthDate: LocalDate, date: LocalDate): string {
+  const months = fullMonthsBetween(birthDate, date);
+  if (months === 0) return `생후 ${Math.max(0, diffDays(date, birthDate))}일`;
+  if (months >= 24) {
+    const rest = months % 12;
+    return `만 ${Math.floor(months / 12)}세${rest ? ` ${rest}개월` : ''}`;
+  }
+  const days = diffDays(date, addMonths(birthDate, months));
+  return `생후 ${months}개월${days ? ` ${days}일` : ''}`;
+}
+
 export type Celebration = { code: string; title: string; date: LocalDate };
 
 /** 50일 · 100일은 태어난 날을 1일째로 센다 (관습). 돌은 1년 뒤 같은 날 */

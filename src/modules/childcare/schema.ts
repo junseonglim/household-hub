@@ -5,18 +5,20 @@ import {
   date,
   index,
   integer,
+  jsonb,
   numeric,
   pgTable,
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { id, timestamps } from '../../db/columns';
 import { household, householdMember } from '../core/schema';
 
 // drizzle-kit이 이 파일을 직접 읽으므로 '@/' 별칭 대신 상대 경로를 쓴다.
-// 테이블 정의: docs/04-data-model.md 5절. care_log · milestone은 M4-2에서 추가한다.
+// 테이블 정의: docs/04-data-model.md 5절.
 
 /** 아이. 태어나기 전에는 태명 · 예정일만 있다 */
 export const child = pgTable(
@@ -76,6 +78,55 @@ export const healthEvent = pgTable(
   ],
 );
 
+/** 신생아 기록 종류별 내용 (care/validators.ts가 검증한다) */
+export type CareLogDetails =
+  | { method: 'breast'; side: 'left' | 'right' | 'both' }
+  | { method: 'pumped' | 'formula'; amountMl: number }
+  | { kind: 'wet' | 'dirty' | 'both' }
+  | { celsius: number }
+  | { name: string; dose: string | null }
+  | Record<string, never>;
+
+/**
+ * 신생아 기록: 수유 · 기저귀 · 수면 · 체온 · 약.
+ * 수면 · 모유 직수는 타이머라 끝 시각이 비어 있으면 진행 중이다 (아이마다 종류별 하나).
+ */
+export const careLog = pgTable(
+  'care_log',
+  {
+    id: id(),
+    householdId: uuid()
+      .notNull()
+      .references(() => household.id, { onDelete: 'cascade' }),
+    childId: uuid()
+      .notNull()
+      .references(() => child.id, { onDelete: 'cascade' }),
+    /** 'feeding' | 'diaper' | 'sleep' | 'temperature' | 'medicine' */
+    type: text().notNull(),
+    startedAt: timestamp({ withTimezone: true }).notNull(),
+    /** 수면 · 모유 직수만. null이면 진행 중 */
+    endedAt: timestamp({ withTimezone: true }),
+    details: jsonb()
+      .$type<CareLogDetails>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    note: text(),
+    recordedByMemberId: uuid()
+      .notNull()
+      .references(() => householdMember.id),
+    ...timestamps,
+  },
+  (table) => [
+    index('care_log_child_started_idx').on(table.childId, table.startedAt.desc()),
+    // 진행 중인 타이머는 아이마다 종류별 하나
+    uniqueIndex('care_log_running_timer_unique')
+      .on(table.childId, table.type)
+      .where(
+        sql`${table.endedAt} is null and (${table.type} = 'sleep' or (${table.type} = 'feeding' and ${table.details}->>'method' = 'breast'))`,
+      ),
+  ],
+);
+
 /** 성장 측정. '태어났어요'의 출생 몸무게 · 키도 여기에 남는다 */
 export const growthRecord = pgTable(
   'growth_record',
@@ -129,4 +180,26 @@ export const prepItem = pgTable(
     ...timestamps,
   },
   (table) => [index('prep_item_household_id_idx').on(table.householdId)],
+);
+
+/** 발달 기록 (첫 미소 · 뒤집기 …). 몇 개월에 해야 한다는 기준은 두지 않는다 */
+export const milestone = pgTable(
+  'milestone',
+  {
+    id: id(),
+    householdId: uuid()
+      .notNull()
+      .references(() => household.id, { onDelete: 'cascade' }),
+    childId: uuid()
+      .notNull()
+      .references(() => child.id, { onDelete: 'cascade' }),
+    title: text().notNull(),
+    achievedOn: date({ mode: 'string' }).notNull(),
+    note: text(),
+    recordedByMemberId: uuid()
+      .notNull()
+      .references(() => householdMember.id),
+    ...timestamps,
+  },
+  (table) => [index('milestone_child_achieved_idx').on(table.childId, table.achievedOn)],
 );

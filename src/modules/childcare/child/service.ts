@@ -122,7 +122,7 @@ export async function markBorn(ctx: MemberContext, input: BornInput) {
   });
 }
 
-/** 생년월일을 고치면 아직 안 한 표준 일정의 날짜를 다시 계산한다 */
+/** 생년월일을 고치면 아직 안 한 표준 일정의 날짜를 다시 계산하고, 출생 측정 기록을 옮긴다 */
 export async function updateChild(ctx: MemberContext, input: UpdateChildInput) {
   assertCanManageChild(ctx);
   await db.transaction(async (tx) => {
@@ -138,7 +138,16 @@ export async function updateChild(ctx: MemberContext, input: UpdateChildInput) {
       .set({ name: input.name, dueDate: input.dueDate, birthDate: input.birthDate, sex: input.sex })
       .where(eq(child.id, current.id))
       .returning();
-    if (updated!.birthDate !== current.birthDate) await syncStandardSchedule(tx, ctx, updated!);
+    if (current.birthDate && updated!.birthDate && updated!.birthDate !== current.birthDate) {
+      // 태어난 날 잰 기록(출생 몸무게 · 키)도 새 생년월일로 옮긴다
+      await tx
+        .update(growthRecord)
+        .set({ measuredOn: updated!.birthDate })
+        .where(
+          and(eq(growthRecord.childId, current.id), eq(growthRecord.measuredOn, current.birthDate)),
+        );
+      await syncStandardSchedule(tx, ctx, updated!);
+    }
   });
 }
 

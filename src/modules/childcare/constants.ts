@@ -61,3 +61,62 @@ export type PrepCategory = (typeof PREP_CATEGORIES)[number];
 export function isPrepCategory(value: string): value is PrepCategory {
   return (PREP_CATEGORIES as readonly string[]).includes(value);
 }
+
+// 신생아 기록 (docs/modules/childcare.md 4.2절)
+
+export const CARE_LOG_TYPES = ['feeding', 'diaper', 'sleep', 'temperature', 'medicine'] as const;
+export type CareLogType = (typeof CARE_LOG_TYPES)[number];
+export const CARE_LOG_LABELS: Record<CareLogType, string> = {
+  feeding: '수유',
+  diaper: '기저귀',
+  sleep: '수면',
+  temperature: '체온',
+  medicine: '약',
+};
+export const CARE_LOG_ICONS: Record<CareLogType, string> = {
+  feeding: '🍼',
+  diaper: '🧷',
+  sleep: '😴',
+  temperature: '🌡️',
+  medicine: '💊',
+};
+
+export const FEEDING_METHODS = ['breast', 'pumped', 'formula'] as const;
+export type FeedingMethod = (typeof FEEDING_METHODS)[number];
+export const FEEDING_METHOD_LABELS: Record<FeedingMethod, string> = {
+  breast: '모유',
+  pumped: '유축 모유',
+  formula: '분유',
+};
+
+export const BREAST_SIDES = ['left', 'right', 'both'] as const;
+export type BreastSide = (typeof BREAST_SIDES)[number];
+export const BREAST_SIDE_LABELS: Record<BreastSide, string> = {
+  left: '왼쪽',
+  right: '오른쪽',
+  both: '양쪽',
+};
+
+export const DIAPER_KINDS = ['wet', 'dirty', 'both'] as const;
+export type DiaperKind = (typeof DIAPER_KINDS)[number];
+export const DIAPER_KIND_LABELS: Record<DiaperKind, string> = {
+  wet: '소변',
+  dirty: '대변',
+  both: '소변 · 대변',
+};
+
+/** 유축 · 분유 양 칩 (ml) */
+export const AMOUNT_PRESETS = [40, 60, 80, 100, 120, 140, 160] as const;
+
+/** 발달 기록 추천 칩. 몇 개월에 해야 한다는 기준은 보여 주지 않는다 */
+export const MILESTONE_PRESETS = [
+  '첫 미소',
+  '목 가누기',
+  '뒤집기',
+  '혼자 앉기',
+  '기기',
+  '잡고 서기',
+  '첫걸음',
+  '첫 이',
+  '첫 말',
+] as const;

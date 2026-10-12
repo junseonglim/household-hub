@@ -132,7 +132,10 @@ test('생년월일을 고치면 아직 안 한 일정만 다시 계산한다', a
   await page.getByRole('link', { name: '하늘 정보 고치기' }).click();
   await page.getByLabel('태어난 날').fill(birthDate);
   await page.getByRole('button', { name: '저장' }).click();
-  await expect(page.getByRole('region', { name: '하늘' })).toContainText('생후 60일');
+  const card = page.getByRole('region', { name: '하늘' });
+  await expect(card).toContainText('생후 60일');
+  // 출생 몸무게 · 키도 새 생년월일로 옮겨진다
+  await expect(card).toContainText('3.25kg · 50.5cm');
 
   await page.goto('/childcare/schedule');
   await expect(page.getByRole('listitem', { name: '100일' })).toContainText(
@@ -143,4 +146,125 @@ test('생년월일을 고치면 아직 안 한 일정만 다시 계산한다', a
   await expect(
     page.getByRole('region', { name: '한 일정' }).getByRole('listitem', { name: 'DTaP 1차' }),
   ).toContainText(formatShortDate(today));
+});
+
+test('기저귀 · 분유는 몇 번의 탭으로 기록하고, 마지막 수유 · 하루 합계에 바로 보인다', async ({
+  page,
+}) => {
+  await page.goto('/childcare');
+  await page.getByRole('button', { name: '기저귀', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: /기저귀 기록/ })
+    .getByRole('button', { name: '대변' })
+    .click();
+  await expect(page.getByText('대변 기록했어요.')).toBeVisible();
+  await expect(page.getByLabel('마지막 대변')).toContainText('오늘');
+
+  await page.getByRole('button', { name: '수유', exact: true }).click();
+  const feeding = page.getByRole('dialog', { name: /수유 기록/ });
+  await feeding.getByRole('radio', { name: '분유', exact: true }).check();
+  await feeding.getByRole('button', { name: '120ml' }).click();
+  await expect(page.getByText('분유 120ml 기록했어요.')).toBeVisible();
+  await expect(page.getByLabel('마지막 수유')).toContainText('분유 120ml');
+
+  const totals = page.getByRole('list', { name: '하루 합계' });
+  await expect(totals).toContainText('수유 1회 (분유 120ml)');
+  await expect(totals).toContainText('기저귀 소변 0 · 대변 1');
+
+  // 잘못 넣었으면 토스트의 [취소]로 바로 지운다
+  await page.goto('/childcare');
+  await page.getByRole('button', { name: '체온', exact: true }).click();
+  const temperature = page.getByRole('dialog', { name: /체온 기록/ });
+  await temperature.getByLabel('체온 (℃)').fill('37.8');
+  await temperature.getByRole('button', { name: '저장' }).click();
+  await expect(page.getByRole('listitem', { name: '체온 37.8℃' })).toBeVisible();
+  await page.getByRole('button', { name: '취소' }).click();
+  await expect(page.getByText('기록을 취소했어요.')).toBeVisible();
+  await expect(page.getByRole('listitem', { name: '체온 37.8℃' })).toHaveCount(0);
+});
+
+test('재우기 타이머를 [깼어요]로 끝내고, 시각을 고치면 그날 합계에 들어간다', async ({ page }) => {
+  await page.goto('/childcare');
+  await page.getByRole('button', { name: '재우기', exact: true }).click();
+  const running = page.getByRole('region', { name: '진행 중' });
+  await expect(running).toContainText('자는 중');
+  // 자는 중에 또 누르면 안내만 한다
+  await page.getByRole('button', { name: '재우기', exact: true }).click();
+  await expect(page.getByText(/이미 자는 중이에요/)).toBeVisible();
+
+  await running.getByRole('button', { name: '깼어요' }).click();
+  await expect(page.getByRole('region', { name: '진행 중' })).toHaveCount(0);
+
+  // 어제 13:00 ~ 14:30으로 고치면 어제 기록이 된다
+  const yesterday = addDays(today, -1);
+  await page.getByRole('button', { name: /수면 0분 고치기$/ }).click();
+  const edit = page.getByRole('dialog', { name: /수면 기록 고치기/ });
+  await edit.getByLabel('시작 시각').fill(`${yesterday}T13:00`);
+  await edit.getByLabel('끝 시각').fill(`${yesterday}T14:30`);
+  await edit.getByRole('button', { name: '저장' }).click();
+  await expect(page.getByText('기록을 고쳤어요.')).toBeVisible();
+
+  await page.getByRole('link', { name: '전날' }).click();
+  await expect(page.getByRole('heading', { name: formatShortDate(yesterday) })).toBeVisible();
+  await expect(page.getByRole('list', { name: '하루 합계' })).toContainText('수면 1시간 30분');
+  await expect(page.getByRole('listitem', { name: '수면 1시간 30분' })).toBeVisible();
+});
+
+test('모유는 다음에 먹일 쪽을 알려 주고, 다음 수유 창에서 그쪽을 골라 둔다', async ({ page }) => {
+  await page.goto('/childcare');
+  await page.getByRole('button', { name: '수유', exact: true }).click();
+  let feeding = page.getByRole('dialog', { name: /수유 기록/ });
+  await feeding.getByRole('radio', { name: '모유', exact: true }).check();
+  await feeding.getByRole('radio', { name: '왼쪽' }).check();
+  await feeding.getByLabel('몇 분 먹였어요? (선택)').fill('15');
+  await feeding.getByRole('button', { name: '저장' }).click();
+  await expect(page.getByText('모유 왼쪽 15분 기록했어요.')).toBeVisible();
+  await expect(page.getByLabel('마지막 수유')).toContainText('다음은 오른쪽');
+
+  await page.getByRole('button', { name: '수유', exact: true }).click();
+  feeding = page.getByRole('dialog', { name: /수유 기록/ });
+  await feeding.getByRole('radio', { name: '모유', exact: true }).check();
+  await expect(feeding.getByRole('radio', { name: '오른쪽' })).toBeChecked();
+  // 분을 비워 두면 타이머로 시작한다
+  await feeding.getByRole('button', { name: '타이머 시작' }).click();
+  const running = page.getByRole('region', { name: '진행 중' });
+  await expect(running).toContainText('모유 오른쪽 먹는 중');
+  await running.getByRole('button', { name: '끝' }).click();
+  await expect(page.getByRole('region', { name: '진행 중' })).toHaveCount(0);
+  await expect(page.getByLabel('마지막 수유')).toContainText('다음은 왼쪽');
+});
+
+test('키 · 몸무게를 남기면 늘어난 양과 그래프가, 발달 기록은 생후 날짜와 함께 보인다', async ({
+  page,
+}) => {
+  await page.goto('/childcare/growth');
+  const records = page.getByRole('list', { name: '측정 기록' });
+  await expect(records.getByRole('listitem')).toHaveCount(1);
+  await expect(records).toContainText('생후 0일 · 출생');
+
+  await page.getByRole('button', { name: '측정 추가' }).click();
+  const measurement = page.getByRole('dialog', { name: '측정 기록' });
+  await measurement.getByRole('button', { name: '저장' }).click();
+  await expect(
+    measurement.getByText('몸무게 · 키 · 머리둘레 중 하나 이상 써 주세요.'),
+  ).toBeVisible();
+  await measurement.getByLabel('몸무게 kg').fill('5.1');
+  await measurement.getByLabel('키 cm').fill('58.2');
+  await measurement.getByRole('button', { name: '저장' }).click();
+  await expect(page.getByText('측정 기록을 남겼어요.')).toBeVisible();
+
+  const latest = records.getByRole('listitem').first();
+  await expect(latest).toContainText('+1.85');
+  await expect(latest).toContainText('+7.7');
+  await expect(page.getByRole('img', { name: /몸무게 3\.25kg에서 5\.1kg로/ })).toBeVisible();
+
+  await page.getByRole('button', { name: '발달 기록 추가' }).click();
+  const milestone = page.getByRole('dialog', { name: '발달 기록' });
+  await milestone.getByRole('button', { name: '첫 미소' }).click();
+  await expect(milestone.getByLabel('무엇을 했나요?')).toHaveValue('첫 미소');
+  await milestone.getByRole('button', { name: '저장' }).click();
+  await expect(page.getByText('첫 미소 기록을 남겼어요.')).toBeVisible();
+  await expect(
+    page.getByRole('list', { name: '발달 기록' }).getByRole('listitem', { name: '첫 미소' }),
+  ).toContainText(/생후 [12]개월/);
 });

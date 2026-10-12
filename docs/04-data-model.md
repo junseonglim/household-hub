@@ -1,6 +1,6 @@
 # 04. 데이터 모델
 
-> 상태: v0.5 (M4-1 구현 반영) · 2026-10-12 · DB: PostgreSQL (운영: Neon)
+> 상태: v0.6 (M4 구현 반영) · 2026-10-12 · DB: PostgreSQL (운영: Neon)
 
 ## 1. 공통 규칙
 
@@ -204,7 +204,7 @@ erDiagram
 
 ## 5. 육아
 
-[모듈: 육아](modules/childcare.md). M4-1에서 child · health_event · growth_record · prep_item을 만들었다 (정의: `src/modules/childcare/schema.ts`, 마이그레이션 `0004_childcare_prep_schedule.sql`). care_log · milestone은 M4-2에서 만든다.
+[모듈: 육아](modules/childcare.md). 정의: `src/modules/childcare/schema.ts`. 마이그레이션: `0004_childcare_prep_schedule.sql`(M4-1: child · health_event · growth_record · prep_item), `0005_childcare_records.sql`(M4-2: care_log · milestone).
 
 ```mermaid
 erDiagram
@@ -237,7 +237,7 @@ erDiagram
 | child_id | uuid | FK (cascade), not null | |
 | type | text | not null | `feeding` · `diaper` · `sleep` · `temperature` · `medicine` |
 | started_at | timestamptz | not null | 기록 시각 (타이머는 시작 시각) |
-| ended_at | timestamptz | null | 수면 · 직수만. null이면 진행 중 |
+| ended_at | timestamptz | null | 수면 · 직수만. null이면 진행 중. 직수를 '몇 분'으로 넣으면 started_at = 끝난 시각 − 분 |
 | details | jsonb | not null, 기본 `{}` | 종류별 내용 (아래) |
 | note | text | null | |
 | recorded_by_member_id | uuid | FK, not null | |
@@ -252,8 +252,8 @@ erDiagram
 | temperature | `{ celsius: number }` (34.0~42.0) |
 | medicine | `{ name: string, dose: string \| null }` |
 
-- index `(child_id, started_at DESC)` — 하루 타임라인 · 마지막 수유
-- 부분 index `(child_id, type) WHERE ended_at IS NULL AND type IN ('sleep', 'feeding')` — 진행 중 타이머 (종류별 하나는 앱에서 보장)
+- index `care_log_child_started_idx (child_id, started_at DESC)` — 하루 타임라인 · 마지막 수유
+- 부분 unique index `care_log_running_timer_unique (child_id, type) WHERE ended_at IS NULL AND (type = 'sleep' OR (type = 'feeding' AND details->>'method' = 'breast'))` — 진행 중 타이머는 아이마다 종류별 하나 (앱에서 먼저 검사하고, 동시에 눌렀을 때는 DB가 막는다). 분유 · 유축은 끝 시각 없이 저장하므로 타이머가 아니다
 
 ### health_event — 건강 · 일정
 
@@ -299,6 +299,8 @@ erDiagram
 | achieved_on | date | not null | |
 | note | text | null | |
 | recorded_by_member_id | uuid | FK, not null | |
+
+- index `milestone_child_achieved_idx (child_id, achieved_on)`
 
 ### prep_item — 출산 준비 체크리스트
 

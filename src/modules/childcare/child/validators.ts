@@ -27,8 +27,8 @@ const sexSchema = z
   .transform((value) => value || null)
   .pipe(z.enum(SEXES, { error: '성별을 다시 골라 주세요.' }).nullable());
 
-/** 빈칸이면 null, 숫자면 소수 digits자리로 반올림 */
-const optionalDecimal = (min: number, max: number, digits: number, message: string) =>
+/** 빈칸이면 null, 숫자면 소수 digits자리로 반올림 (성장 기록도 쓴다) */
+export const optionalDecimal = (min: number, max: number, digits: number, message: string) =>
   z
     .string()
     .trim()

@@ -3,6 +3,7 @@ import {
   ageOf,
   celebrationsOf,
   describeAge,
+  describeAgeOn,
   describePregnancy,
   formatDday,
   nextCelebration,
@@ -42,6 +43,14 @@ describe('생후', () => {
     expect(describeAge(ageOf('2027-03-14', '2027-05-14'))).toBe('생후 61일 · 2개월');
     expect(describeAge(ageOf('2027-03-14', '2028-03-13'))).toBe('생후 365일 · 11개월');
     expect(describeAge(ageOf('2027-03-14', '2029-04-01'))).toBe('생후 24개월 · 만 2세');
+  });
+
+  it('목록에는 짧게: 한 달 전엔 날, 두 살 전엔 개월 · 날, 그 뒤엔 나이', () => {
+    expect(describeAgeOn('2027-03-14', '2027-03-14')).toBe('생후 0일');
+    expect(describeAgeOn('2027-03-14', '2027-04-06')).toBe('생후 23일');
+    expect(describeAgeOn('2027-03-14', '2027-05-14')).toBe('생후 2개월');
+    expect(describeAgeOn('2027-03-14', '2027-05-17')).toBe('생후 2개월 3일');
+    expect(describeAgeOn('2027-03-14', '2029-04-20')).toBe('만 2세 1개월');
   });
 
   it('기념일: 50일 · 100일은 태어난 날을 1일째로, 돌은 1년 뒤 같은 날', () => {

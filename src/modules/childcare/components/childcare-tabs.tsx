@@ -8,14 +8,10 @@ import type { ChildItem } from '../child/queries';
 export const withChild = (href: string, childId?: string | null) =>
   (childId ? `${href}${href.includes('?') ? '&' : '?'}child=${childId}` : href) as Route;
 
-/** 육아 화면 묶음: 오늘 | 일정 | 준비 (성장은 M4-2) */
-export function ChildcareTabs({
-  current,
-  childId,
-}: {
-  current: 'today' | 'schedule' | 'prep';
-  childId?: string | null;
-}) {
+type Tab = 'today' | 'schedule' | 'growth' | 'prep';
+
+/** 육아 화면 묶음: 오늘 | 일정 | 성장 | 준비 */
+export function ChildcareTabs({ current, childId }: { current: Tab; childId?: string | null }) {
   return (
     <SegmentedLinks
       label="육아 보기"
@@ -25,6 +21,11 @@ export function ChildcareTabs({
           href: withChild('/childcare/schedule', childId),
           label: '일정',
           active: current === 'schedule',
+        },
+        {
+          href: withChild('/childcare/growth', childId),
+          label: '성장',
+          active: current === 'growth',
         },
         { href: withChild('/childcare/prep', childId), label: '준비', active: current === 'prep' },
       ]}
@@ -40,7 +41,7 @@ export function ChildPicker({
 }: {
   childList: ChildItem[];
   selectedId: string;
-  basePath: '/childcare' | '/childcare/schedule' | '/childcare/prep';
+  basePath: '/childcare' | '/childcare/schedule' | '/childcare/growth' | '/childcare/prep';
 }) {
   if (childList.length < 2) return null;
   return (
@@ -68,12 +69,17 @@ export function ChildcareNav({
   childList,
   selectedId,
 }: {
-  current: 'today' | 'schedule' | 'prep';
+  current: Tab;
   childList: ChildItem[];
   selectedId: string | null;
 }) {
   const basePath = (
-    { today: '/childcare', schedule: '/childcare/schedule', prep: '/childcare/prep' } as const
+    {
+      today: '/childcare',
+      schedule: '/childcare/schedule',
+      growth: '/childcare/growth',
+      prep: '/childcare/prep',
+    } as const
   )[current];
   // 아이가 하나면 주소에 남길 필요가 없다
   const childId = childList.length > 1 ? selectedId : null;
