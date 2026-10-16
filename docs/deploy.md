@@ -63,7 +63,9 @@
    - Environments: Production · Preview · Development 모두 선택
    - `DATABASE_URL`, `DATABASE_URL_UNPOOLED` 등이 자동으로 들어갑니다.
    - "Preview 배포마다 DB 브랜치 만들기" 같은 선택지가 있으면 켭니다 (미리보기 배포가 실제 데이터를 건드리지 않게).
-2. 프로젝트 → **Settings → Functions → Function Region**을 DB와 같은 지역(예: Singapore)으로 바꿉니다.
+2. 서버 코드가 도는 지역(함수 리전)은 저장소의 `vercel.json`에 **Singapore(`sin1`)** 로 정해 두었습니다. 대시보드에서 따로 바꾸지 않아도 됩니다.
+   - DB를 Singapore가 아닌 곳에 만들었다면 `vercel.json`의 `regions`를 그 지역 코드로 바꿉니다 (DB와 함수가 멀면 화면마다 몇 초씩 느려집니다 — 아래 문제 해결 참고).
+   - 확인: 배포 뒤 `https://<주소>/api/health` 응답 헤더 `x-vercel-id`가 `icn1::sin1::…`이면 서울 → 싱가포르로 처리된 것입니다.
 3. **Deployments** → 실패한 배포의 **⋯ → Redeploy**
 
 `BETTER_AUTH_URL`은 넣지 않아도 됩니다. Vercel 주소를 자동으로 씁니다.
@@ -90,6 +92,7 @@
 | 설치 단계(`pnpm install`)에서 lockfile · 버전 오류 | 3-3의 `ENABLE_EXPERIMENTAL_COREPACK=1`이 있는지 |
 | `/api/health`가 `db: down` | Neon 대시보드에서 DB가 살아 있는지, 무료 한도를 넘지 않았는지 |
 | 처음 열 때 몇 초 느림 | 정상. Neon 무료 플랜은 5분간 쓰지 않으면 잠깐 쉬었다가 깨어남 |
+| 화면을 옮길 때마다 몇 초씩 느림 | 함수 리전과 DB 지역이 다른지 확인 (`x-vercel-id`의 두 번째 값, 예: `iad1`이면 미국 동부). 2026-10-16에 미국 동부(`iad1`) ↔ 싱가포르 DB로 DB 왕복 한 번에 약 0.23초, 화면마다 6~7초가 걸리던 것을 `vercel.json`으로 맞췄다 |
 | 관리자 모두 비밀번호를 잊음 | 아래 비상 초기화 |
 
 ### 비상 초기화 (관리자 모두 비밀번호를 잊었을 때)
